@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Gallery</string>
+    <string name="loading">Loading</string>
+    <string name="permission_warning">You need the permission to proceed. Try again?</string>
+    <string name="yes">Yes</string>
+    <string name="close">Close</string>
+    <string name="perm_denied">Permissions denied</string>
+    <string name="camera">Camera</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="delete">DELETE</string>
+    <string name="sure">Are you sure?</string>
+    <string name="del_warning">The picture will be deleted</string>
+    <string name="cancel">Cancel</string>
+    <string name="deletion_failure_toast_message">Empty path to the image</string>
+</resources>
