@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.gallery.Constants.IMG_PATH_KEY
+import com.example.gallery.Constants.IMG_KEY
 import com.example.gallery.Constants.RV_SPAN_COUNT
 import com.example.gallery.Constants.defaultFolderName
 import com.example.gallery.R
@@ -70,7 +70,7 @@ class MainFragment : Fragment(), GalleryContract.MainView {
     }
 
     override fun showFullImage(image: Image) {
-        showImageFullscreen(image.path)
+        showImageFullscreen(image)
     }
 
     override fun showFolders(foldersList: List<Folder>) {
@@ -91,10 +91,10 @@ class MainFragment : Fragment(), GalleryContract.MainView {
             chip.text = if (isDefault) selectedFolderName else folder.name
             chip.setOnClickListener {
                 chip.isChecked = true
-                presenter?.loadPreviewsByFolderName(folder.name)
+                presenter?.loadImagesByFolderName(folder.name)
             }
             foldersChipGroup?.addView(chip)
-            presenter?.loadPreviewsByFolderName(folder.name)
+            presenter?.loadImagesByFolderName(folder.name)
             if (!defaultFolderPresents) {
                 chip.isChecked = true
             }
@@ -111,14 +111,14 @@ class MainFragment : Fragment(), GalleryContract.MainView {
         }
     }
 
-    private fun showImageFullscreen(imagePath: String) {
+    private fun showImageFullscreen(image: Image) {
 
         val manager = requireActivity().supportFragmentManager
         val fragmentTransaction = manager
             .beginTransaction()
             .replace(
                 R.id.container,
-                getFullscreenFragment(manager).apply { arguments = bundleOf(IMG_PATH_KEY to imagePath) },
+                getFullscreenFragment(manager).apply { arguments = bundleOf(IMG_KEY to image) },
                 FullscreenFragment.FRAGMENT_NAME
             )
         fragmentTransaction.addToBackStack(FullscreenFragment.FRAGMENT_NAME)

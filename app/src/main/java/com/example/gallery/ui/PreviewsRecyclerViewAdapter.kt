@@ -26,7 +26,8 @@ class PreviewsRecyclerViewAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val image = values[position]
-        holder.preview.setImageBitmap(image.preview)
+//        holder.preview.setImageBitmap(image.preview)
+        holder.preview.setImageURI(image.contentUri)
         holder.preview.setOnClickListener { onClick(image) }
     }
 

@@ -23,7 +23,7 @@ interface GalleryContract {
 
     interface Presenter {
         fun loadContent()
-        fun loadPreviewsByFolderName(folderName: String)
+        fun loadImagesByFolderName(folderName: String)
         fun getImage()
         fun deleteImageByPath(path: String)
         fun attachView(mainView: BaseView)

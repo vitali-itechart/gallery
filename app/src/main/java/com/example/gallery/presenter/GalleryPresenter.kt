@@ -24,7 +24,7 @@ class GalleryPresenter(private val repo: GalleryRepository) : GalleryContract.Pr
         }
     }
 
-    override fun loadPreviewsByFolderName(folderName: String) {
+    override fun loadImagesByFolderName(folderName: String) {
 
         fun loadPreviewsFromCache() {
             val folder = foldersCache?.find { it.name == folderName }

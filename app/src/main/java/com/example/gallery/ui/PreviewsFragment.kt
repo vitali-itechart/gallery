@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.gallery.R
-import com.example.gallery.ui.placeholder.PlaceholderContent
 
 /**
  * A fragment representing a list of Items.

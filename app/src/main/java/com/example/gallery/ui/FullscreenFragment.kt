@@ -1,8 +1,12 @@
 package com.example.gallery.ui
 
+import android.app.RecoverableSecurityException
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,14 +14,19 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.example.gallery.Constants.IMG_PATH_KEY
+import com.example.gallery.Constants.IMG_KEY
 import com.example.gallery.R
 import com.example.gallery.data.GalleryRepository
+import com.example.gallery.data.entity.Image
 import com.example.gallery.databinding.FragmentFullscreenBinding
 import com.example.gallery.presenter.GalleryPresenter
+import java.io.File
 
 /**
  * An example full-screen fragment that shows and hides the system UI (i.e.
@@ -26,6 +35,8 @@ import com.example.gallery.presenter.GalleryPresenter
 class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
     private val hideHandler = Handler()
     private var presenter: GalleryPresenter? = null
+
+    private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     @Suppress("InlinedApi")
     private val hidePart2Runnable = Runnable {
@@ -86,7 +97,7 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val path = arguments?.getString(IMG_PATH_KEY)
+        val image = arguments?.get(IMG_KEY) as Image
         presenter = GalleryPresenter(GalleryRepository(requireContext()))
         presenter?.attachView(this)
 
@@ -98,27 +109,46 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
         // Set up the user interaction to manually show or hide the system UI.
         fullscreenContent?.setOnClickListener { toggle() }
 
+        intentSenderLauncher =
+            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+                if (it.resultCode == AppCompatActivity.RESULT_OK) {
+                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                        deletePhotoFromExternalStorage(Uri.EMPTY /*"deletedImageUri"*/)
+                    }
+                    Toast.makeText(
+                        requireContext(),
+                        "Photo deleted successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Photo couldn't be deleted",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         deleteButton?.setOnTouchListener(delayHideTouchListener)
         deleteButton?.setOnClickListener {
             requestDeletionConfirmation { result ->
-                if (!path.isNullOrEmpty()) {
-                    when (result) {
-                        DeletionDialogResult.YES -> {presenter?.deleteImageByPath(path)}
-                        DeletionDialogResult.CANCEL -> {}
+                when (result) {
+                    DeletionDialogResult.YES -> {
+//                        presenter?.deleteImageByPath(path)
+                        deletePhotoFromExternalStorage(image.contentUri)
+//                        val file = File(path)
+//                        println("File exists: ${file.exists()}")
                     }
-                } else {
-                    Toast.makeText(requireContext(), getString(R.string.deletion_failure_toast_message), Toast.LENGTH_LONG).show()
+                    DeletionDialogResult.CANCEL -> {
+                    }
                 }
             }
         }
 
-        path?.let {
-            val bitmap = BitmapFactory.decodeFile(it)
-            (fullscreenContent as ImageView).setImageBitmap(bitmap)
-        }
+        (fullscreenContent as ImageView).setImageURI(image.contentUri)
 
 //        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
     }
@@ -238,6 +268,33 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
             .setNegativeButton(negativeButtonText) { _, _ -> callback(DeletionDialogResult.CANCEL); dialog?.dismiss() }
             .setCancelable(false)
             .show()
+    }
+
+    private fun deletePhotoFromExternalStorage(photoUri: Uri) {
+        val contentResolver = activity?.contentResolver
+        try {
+            contentResolver?.delete(photoUri, null, null)
+        } catch (e: SecurityException) {
+            val intentSender = when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                    MediaStore.createDeleteRequest(
+                        contentResolver ?: error("Content resolver must not be null"),
+                        listOf(photoUri)
+                    ).intentSender
+                }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                    val recoverableSecurityException = e as? RecoverableSecurityException
+                    recoverableSecurityException?.userAction?.actionIntent?.intentSender
+                }
+                else -> null
+            }
+            intentSender?.let { sender ->
+                intentSenderLauncher.launch(
+                    IntentSenderRequest.Builder(sender).build()
+                )
+            }
+        }
+
     }
 
     private enum class DeletionDialogResult { YES, CANCEL }

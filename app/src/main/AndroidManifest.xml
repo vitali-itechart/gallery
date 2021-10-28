@@ -3,10 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.gallery">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        tools:remove="android:maxSdkVersion"
-    />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        tools:remove="android:maxSdkVersion" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"/>
 
     <application
         android:allowBackup="true"
@@ -15,6 +17,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Gallery">
+
+<!--        <provider-->
+<!--            android:name=".ui.GalleryFileProvider"-->
+<!--            android:authorities="com.example.gallery"-->
+<!--            android:grantUriPermissions="true"-->
+<!--            android:enabled="true"-->
+<!--            android:exported="false">-->
+<!--            <meta-data-->
+<!--                android:name="android.support.FILE_PROVIDER_PATHS"-->
+<!--                android:resource="@xml/provider_paths" />-->
+<!--        </provider>-->
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">

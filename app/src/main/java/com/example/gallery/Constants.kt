@@ -7,4 +7,5 @@ object Constants {
     const val defaultFolderName = "Camera"
     const val ARGS_KEY = "ARGS_KEY"
     const val IMG_PATH_KEY = "IMG_PATH_KEY"
+    const val IMG_KEY = "IMG_KEY"
 }
