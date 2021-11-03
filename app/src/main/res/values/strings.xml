@@ -13,4 +13,5 @@
     <string name="del_warning">The picture will be deleted</string>
     <string name="cancel">Cancel</string>
     <string name="deletion_failure_toast_message">Empty path to the image</string>
+    <string name="no_folders_with_images_found">No folders with images found</string>
 </resources>

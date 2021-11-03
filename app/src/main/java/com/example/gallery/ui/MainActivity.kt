@@ -88,7 +88,6 @@ class MainActivity : AppCompatActivity(), GalleryContract {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val grantedResultCode = 0 //not Activity.RESULT_OK for some reason
         val isGranted = grantResults[0] == grantedResultCode
-        println("Permission: " + permissions[0] + " was granted: $isGranted")
         permissionsCallback?.invoke(null, isGranted)
     }
 

@@ -32,6 +32,7 @@ class MainFragment : Fragment(), GalleryContract.MainView {
     private var loadingText: TextView? = null
     private var foldersChipGroup: ChipGroup? = null
     private var pbContainer: LinearLayout? = null
+    private var emptyStateTv: TextView? = null
 
     companion object {
         val FRAGMENT_NAME: String = MainFragment::class.java.name
@@ -51,6 +52,7 @@ class MainFragment : Fragment(), GalleryContract.MainView {
         loadingText = view.findViewById(R.id.loading_text)
         foldersChipGroup = view.findViewById(R.id.folders)
         rv = view.findViewById(R.id.previews)
+        emptyStateTv = view.findViewById(R.id.empty_text)
 
         presenter = GalleryPresenter(GalleryRepository(requireContext()))
         presenter?.attachView(this)
@@ -75,6 +77,12 @@ class MainFragment : Fragment(), GalleryContract.MainView {
 
     override fun showFolders(foldersList: List<Folder>) {
 
+        if (foldersList.isEmpty()) {
+            emptyStateTv?.visibility = View.VISIBLE
+            return
+        } else {
+            emptyStateTv?.visibility = View.GONE
+        }
         val selectedFolderName = foldersList[0].name
         var defaultFolderPresents = false
         //sets the first folder as selected, otherwise selects the camera photos folder

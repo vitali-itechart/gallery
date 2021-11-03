@@ -7,13 +7,9 @@ import com.example.gallery.data.entity.Folder
 import java.io.File
 
 import android.os.Environment
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import com.example.gallery.data.entity.Image
 import android.net.Uri
-import android.os.Build
 import android.provider.MediaStore
-import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider.getUriForFile
 import com.example.gallery.sdk29AndUp
 
@@ -32,34 +28,58 @@ class GalleryRepository(private val context: Context) {
 
         val resultFolders = mutableListOf<Folder>()
 
-        val basePath = Environment.getExternalStorageDirectory()
-        val mainFolder = File(basePath.absolutePath)
+        val foldersWithImages = getImageFolderNames()
 
-        val files = mainFolder.walkTopDown()
-        val foldersWithImages = files.filter { it.containsImages() }
+        getImageFolderNames().forEach {
+            println("Folder names: $it")
+        }
 
-        foldersWithImages.forEach { folder ->
+        foldersWithImages.forEach { folderName ->
             val images = mutableListOf<Image>()
-            folder.listFiles { file -> isImageFile(file.absolutePath) }?.forEach { imageFile ->
-                val photos = loadPhotosFromExternalStorage(folder.name)
-                images.addAll(photos)
-            }
-            resultFolders.add(Folder(folder.name, images))
+            val photos = loadPhotosFromExternalStorage(folderName)
+            images.addAll(photos)
+            resultFolders.add(Folder(folderName, images))
         }
         return resultFolders
     }
 
-    private fun isImageFile(filePath: String): Boolean {
-        val imageFileExtensions = listOf(".jpg", ".png", ".jpeg")
-        return imageFileExtensions.any { filePath.endsWith(it) }
-    }
+    private fun getImageFolderNames(): List<String> {
 
-    private fun File.containsImages(): Boolean {
-        if (!isDirectory) return false
-        return listFiles()?.any { file -> isImageFile(file.absolutePath) } ?: false
+        val collection = sdk29AndUp {
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        } ?: MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+
+        val projection = arrayOf(
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+            MediaStore.Images.Media.BUCKET_ID,
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DISPLAY_NAME,
+        )
+
+        return context.contentResolver.query(
+            collection,
+            projection,
+            null,
+            null,
+            "${MediaStore.Images.Media.DISPLAY_NAME} ASC"
+        )?.use { cursor ->
+
+            val uris = mutableSetOf<String>()
+
+            val bucket = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+
+            while (cursor.moveToNext()) {
+                val bucketName = cursor.getString(bucket)
+
+                uris.add(bucketName)
+            }
+
+            uris.toList()
+        } ?: emptyList()
     }
 
     private fun loadPhotosFromExternalStorage(folderName: String): List<Image> {
+
         val collection = sdk29AndUp {
             MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
         } ?: MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -69,21 +89,20 @@ class GalleryRepository(private val context: Context) {
             MediaStore.Images.Media.DISPLAY_NAME,
             MediaStore.Images.Media.WIDTH,
             MediaStore.Images.Media.HEIGHT,
-            MediaStore.Images.Media.RELATIVE_PATH,
             MediaStore.Images.Media.DATA,
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+            MediaStore.Images.Media.BUCKET_ID,
         )
 
         val photos = mutableListOf<Image>()
 
-        val selection = "${MediaStore.Images.Media.RELATIVE_PATH} = ?"
-
-        val selectionArgs = arrayOf("DCIM/")
+        val selection = "${MediaStore.Images.Media.BUCKET_DISPLAY_NAME} = '$folderName'"
 
         return context.contentResolver.query(
             collection,
             projection,
             selection,
-            selectionArgs,
+            null,
             "${MediaStore.Images.Media.DISPLAY_NAME} ASC"
         )?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
@@ -91,7 +110,8 @@ class GalleryRepository(private val context: Context) {
                 cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
             val widthColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
             val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
-            val data = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+
+            if (!(cursor.moveToFirst()) || cursor.count == 0) println("Cursor is empty when loading images")
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
@@ -102,13 +122,11 @@ class GalleryRepository(private val context: Context) {
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
-                println("Data: ${cursor.getString(data)}") // TODO: 10/28/21 stopped here: retrieve folder from data
                 photos.add((Image(id, displayName, width, height, contentUri)))
             }
             photos.toList()
         } ?: listOf()
     }
-
 
     fun deleteImageByPath(path: String): Boolean {
         val file = File(path)
@@ -119,6 +137,4 @@ class GalleryRepository(private val context: Context) {
         println("File deleted: $deleted")
         return deleted
     }
-
-
 }
