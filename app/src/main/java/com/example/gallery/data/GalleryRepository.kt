@@ -30,10 +30,6 @@ class GalleryRepository(private val context: Context) {
 
         val foldersWithImages = getImageFolderNames()
 
-        getImageFolderNames().forEach {
-            println("Folder names: $it")
-        }
-
         foldersWithImages.forEach { folderName ->
             val images = mutableListOf<Image>()
             val photos = loadPhotosFromExternalStorage(folderName)
