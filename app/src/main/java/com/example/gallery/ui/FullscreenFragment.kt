@@ -21,20 +21,24 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.gallery.Constants.IMG_KEY
+import com.example.gallery.Constants.URI_KEY
 import com.example.gallery.R
 import com.example.gallery.data.GalleryRepository
 import com.example.gallery.data.entity.Image
 import com.example.gallery.databinding.FragmentFullscreenBinding
 import com.example.gallery.presenter.GalleryPresenter
+import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 
 /**
  * An example full-screen fragment that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
+@AndroidEntryPoint
 class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
     private val hideHandler = Handler()
     private var presenter: GalleryPresenter? = null
+    private var isFromAnotherApp = false
 
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
@@ -97,7 +101,10 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val image = arguments?.get(IMG_KEY) as Image
+        val uriString = arguments?.getString(URI_KEY)
+        val uri = Uri.parse(uriString)
+        val image = arguments?.get(IMG_KEY) as? Image
+        isFromAnotherApp = uriString != null
         presenter = GalleryPresenter(GalleryRepository(requireContext()))
         presenter?.attachView(this)
 
@@ -113,8 +120,12 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
                 if (it.resultCode == AppCompatActivity.RESULT_OK) {
                     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                        deletePhotoFromExternalStorage(Uri.EMPTY /*"deletedImageUri"*/)
+                        image?.let {
+                            deletePhotoFromExternalStorage(image.contentUri)
+                        } ?: deletePhotoFromExternalStorage(uri)
                     }
+                    parentFragmentManager.popBackStack()
+
                     Toast.makeText(
                         requireContext(),
                         "Photo deleted successfully",
@@ -137,10 +148,7 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
             requestDeletionConfirmation { result ->
                 when (result) {
                     DeletionDialogResult.YES -> {
-//                        presenter?.deleteImageByPath(path)
-                        deletePhotoFromExternalStorage(image.contentUri)
-//                        val file = File(path)
-//                        println("File exists: ${file.exists()}")
+                        image?.let { deletePhotoFromExternalStorage(image.contentUri) } ?: deletePhotoFromExternalStorage(uri)
                     }
                     DeletionDialogResult.CANCEL -> {
                     }
@@ -148,9 +156,11 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
             }
         }
 
-        (fullscreenContent as ImageView).setImageURI(image.contentUri)
-
-//        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        if (uri != null) {
+            (fullscreenContent as ImageView).setImageURI(uri)
+        } else {
+            image?.let { (fullscreenContent as ImageView).setImageURI(image.contentUri) }
+        }
     }
 
     override fun onResume() {
@@ -177,6 +187,7 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
         deleteButton = null
         fullscreenContent = null
         fullscreenContentControls = null
+        presenter?.detachView()
     }
 
     private fun toggle() {
@@ -200,15 +211,17 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
     @Suppress("InlinedApi")
     private fun show() {
         // Show the system bar
-        fullscreenContent?.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        visible = true
+        if (!isFromAnotherApp) {
+            fullscreenContent?.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            visible = true
 
-        // Schedule a runnable to display UI elements after a delay
-        hideHandler.removeCallbacks(hidePart2Runnable)
-        hideHandler.postDelayed(showPart2Runnable, UI_ANIMATION_DELAY.toLong())
-        (activity as? AppCompatActivity)?.supportActionBar?.show()
+            // Schedule a runnable to display UI elements after a delay
+            hideHandler.removeCallbacks(hidePart2Runnable)
+            hideHandler.postDelayed(showPart2Runnable, UI_ANIMATION_DELAY.toLong())
+            (activity as? AppCompatActivity)?.supportActionBar?.show()
+        }
     }
 
     /**
@@ -246,10 +259,6 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    override fun onImageDeleted() {
-
     }
 
     private fun requestDeletionConfirmation(callback: (DeletionDialogResult) -> Unit) {
@@ -294,7 +303,6 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
                 )
             }
         }
-
     }
 
     private enum class DeletionDialogResult { YES, CANCEL }

@@ -1,5 +1,10 @@
 package com.example.gallery.presenter
 
+import android.app.RecoverableSecurityException
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import androidx.activity.result.IntentSenderRequest
 import com.example.gallery.Constants.UNKNOWN_ERROR
 import com.example.gallery.data.GalleryRepository
 import com.example.gallery.data.entity.Folder
@@ -41,22 +46,6 @@ class GalleryPresenter(private val repo: GalleryRepository) : GalleryContract.Pr
         } else {
             loadPreviewsFromCache()
         }
-    }
-
-    override fun getImage() {
-
-        repo.getImage { error, image ->
-            if (error == null) {
-                mainView?.stopWaiting()
-                mainView?.showFullImage(image)
-            } else {
-                mainView?.onFailure(error.message ?: UNKNOWN_ERROR)
-            }
-        }
-    }
-
-    override fun deleteImageByPath(path: String) {
-        repo.deleteImageByPath(path)
     }
 
     override fun attachView(view: GalleryContract.BaseView) {

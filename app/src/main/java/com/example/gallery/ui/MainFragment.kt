@@ -1,6 +1,8 @@
 package com.example.gallery.ui
 
+import android.database.ContentObserver
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +10,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -23,7 +26,9 @@ import com.example.gallery.data.entity.Image
 import com.example.gallery.presenter.GalleryPresenter
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainFragment : Fragment(), GalleryContract.MainView {
 
     private var rv: RecyclerView? = null
@@ -33,6 +38,7 @@ class MainFragment : Fragment(), GalleryContract.MainView {
     private var foldersChipGroup: ChipGroup? = null
     private var pbContainer: LinearLayout? = null
     private var emptyStateTv: TextView? = null
+    private lateinit var contentObserver: ContentObserver
 
     companion object {
         val FRAGMENT_NAME: String = MainFragment::class.java.name
@@ -55,8 +61,22 @@ class MainFragment : Fragment(), GalleryContract.MainView {
         emptyStateTv = view.findViewById(R.id.empty_text)
 
         presenter = GalleryPresenter(GalleryRepository(requireContext()))
+        initContentObserver()
         presenter?.attachView(this)
         presenter?.loadContent()
+    }
+
+    private fun initContentObserver() {
+        contentObserver = object : ContentObserver(null) {
+            override fun onChange(selfChange: Boolean) {
+                presenter?.loadContent()
+            }
+        }
+        activity?.contentResolver?.registerContentObserver(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            true,
+            contentObserver
+        )
     }
 
     override fun beginWaiting() {
@@ -73,6 +93,11 @@ class MainFragment : Fragment(), GalleryContract.MainView {
 
     override fun showFullImage(image: Image) {
         showImageFullscreen(image)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as? AppCompatActivity)?.supportActionBar?.show()
     }
 
     override fun showFolders(foldersList: List<Folder>) {
@@ -141,10 +166,6 @@ class MainFragment : Fragment(), GalleryContract.MainView {
         return fragment as FullscreenFragment
     }
 
-    override fun showDeletionDialog() {
-        TODO("show deletion dialog")
-    }
-
     override fun onFailure(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
@@ -152,5 +173,6 @@ class MainFragment : Fragment(), GalleryContract.MainView {
     override fun onDestroyView() {
         super.onDestroyView()
         presenter?.detachView()
+        activity?.contentResolver?.unregisterContentObserver(contentObserver)
     }
 }

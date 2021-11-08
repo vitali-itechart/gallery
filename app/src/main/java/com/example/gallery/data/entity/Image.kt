@@ -11,5 +11,5 @@ data class Image(
     val name: String,
     val width: Int,
     val height: Int,
-    val contentUri: Uri
+    var contentUri: Uri
 ) : Parcelable

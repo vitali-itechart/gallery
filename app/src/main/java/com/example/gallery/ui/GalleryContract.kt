@@ -13,19 +13,14 @@ interface GalleryContract {
         fun showFullImage(image: Image)
         fun showFolders(foldersList: List<Folder>)
         fun showPreviews(imagesList: List<Image>)
-        fun showDeletionDialog()
         fun onFailure(message: String)
     }
 
-    interface FullscreenView : BaseView {
-        fun onImageDeleted()
-    }
+    interface FullscreenView : BaseView
 
     interface Presenter {
         fun loadContent()
         fun loadImagesByFolderName(folderName: String)
-        fun getImage()
-        fun deleteImageByPath(path: String)
         fun attachView(mainView: BaseView)
         fun detachView()
     }
