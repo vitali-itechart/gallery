@@ -20,19 +20,19 @@ import com.example.gallery.Constants.IMG_KEY
 import com.example.gallery.Constants.RV_SPAN_COUNT
 import com.example.gallery.Constants.defaultFolderName
 import com.example.gallery.R
-import com.example.gallery.data.GalleryRepository
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
 import com.example.gallery.presenter.GalleryPresenter
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainFragment : Fragment(), GalleryContract.MainView {
 
     private var rv: RecyclerView? = null
-    private var presenter: GalleryPresenter? = null
+    @Inject lateinit var presenter: GalleryPresenter
     private var loadingProgressBar: ProgressBar? = null
     private var loadingText: TextView? = null
     private var foldersChipGroup: ChipGroup? = null
@@ -60,16 +60,16 @@ class MainFragment : Fragment(), GalleryContract.MainView {
         rv = view.findViewById(R.id.previews)
         emptyStateTv = view.findViewById(R.id.empty_text)
 
-        presenter = GalleryPresenter(GalleryRepository(requireContext()))
         initContentObserver()
-        presenter?.attachView(this)
-        presenter?.loadContent()
+        presenter.attachView(this)
+        presenter.loadContent()
+        println(presenter)
     }
 
     private fun initContentObserver() {
         contentObserver = object : ContentObserver(null) {
             override fun onChange(selfChange: Boolean) {
-                presenter?.loadContent()
+                presenter.loadContent()
             }
         }
         activity?.contentResolver?.registerContentObserver(
@@ -118,16 +118,16 @@ class MainFragment : Fragment(), GalleryContract.MainView {
 
         foldersList.forEach { folder ->
             val chip = Chip(requireContext())
-            var isDefault = folder.name == defaultFolderName
+            val isDefault = folder.name == defaultFolderName
             chip.isCheckable = true
             chip.isChecked = isDefault
             chip.text = if (isDefault) selectedFolderName else folder.name
             chip.setOnClickListener {
                 chip.isChecked = true
-                presenter?.loadImagesByFolderName(folder.name)
+                presenter.loadImagesByFolderName(folder.name)
             }
             foldersChipGroup?.addView(chip)
-            presenter?.loadImagesByFolderName(folder.name)
+            presenter.loadImagesByFolderName(folder.name)
             if (!defaultFolderPresents) {
                 chip.isChecked = true
             }
@@ -138,8 +138,8 @@ class MainFragment : Fragment(), GalleryContract.MainView {
         rv?.let {
             it.layoutManager = GridLayoutManager(context, RV_SPAN_COUNT)
             it.adapter =
-                PreviewsRecyclerViewAdapter(imagesList, onClick = {
-                    showFullImage(it)
+                PreviewsRecyclerViewAdapter(imagesList, onClick = {image ->
+                    showFullImage(image)
                 })
         }
     }
@@ -172,7 +172,7 @@ class MainFragment : Fragment(), GalleryContract.MainView {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        presenter?.detachView()
+        presenter.detachView()
         activity?.contentResolver?.unregisterContentObserver(contentObserver)
     }
 }

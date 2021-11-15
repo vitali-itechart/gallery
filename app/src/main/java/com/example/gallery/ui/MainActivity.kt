@@ -1,34 +1,31 @@
 package com.example.gallery.ui
 
 import android.Manifest
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import androidx.fragment.app.FragmentManager
-import com.example.gallery.R
-
-import androidx.core.app.ActivityCompat
-
 import android.content.pm.PackageManager
-import android.database.ContentObserver
-
-import android.os.Build
-import android.provider.MediaStore
+import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.os.bundleOf
+import androidx.fragment.app.FragmentManager
 import com.example.gallery.Constants
-import com.example.gallery.data.entity.Image
+import com.example.gallery.R
+import com.example.gallery.presenter.GalleryPresenter
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), GalleryContract {
 
     private var permissionsCallback: ((Throwable?, Boolean) -> Unit)? = null
     private var isFromAnotherApp = false
+    @Inject lateinit var presenter: GalleryPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setup()
+        println(presenter)
     }
 
     private fun setup() {
@@ -37,7 +34,7 @@ class MainActivity : AppCompatActivity(), GalleryContract {
             isFromAnotherApp = true
             showImageFullscreen(intent.dataString)
         } else {
-            setupPermissions { error, granted ->
+            setupPermissions { _, granted ->
                 if (granted) {
                     showMainFragment()
                 } else {

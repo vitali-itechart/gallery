@@ -2,26 +2,19 @@ package com.example.gallery.data
 
 import android.content.ContentUris
 import android.content.Context
-import com.example.gallery.data.entity.Folder
-
-import java.io.File
-
-import com.example.gallery.data.entity.Image
-import android.net.Uri
 import android.provider.MediaStore
-import androidx.core.content.FileProvider.getUriForFile
 import com.example.gallery.addToList
+import com.example.gallery.data.entity.Folder
+import com.example.gallery.data.entity.Image
 import com.example.gallery.sdk29AndUp
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
 
-class GalleryRepository(val context: Context) {
+class GalleryRepository @Inject constructor (@ApplicationContext private val context: Context) {
 
     fun getContent(callback: (Throwable?, List<Folder>) -> Unit) {
         callback(null, getAllFoldersWithImages())
-    }
-
-    fun getImage(callback: (Throwable?, Image) -> Unit) {
-        // TODO: 10/25/21 return the fullscreen image
     }
 
     private fun getAllFoldersWithImages(): List<Folder> {

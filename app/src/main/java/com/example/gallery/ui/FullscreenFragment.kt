@@ -23,12 +23,12 @@ import androidx.fragment.app.Fragment
 import com.example.gallery.Constants.IMG_KEY
 import com.example.gallery.Constants.URI_KEY
 import com.example.gallery.R
-import com.example.gallery.data.GalleryRepository
 import com.example.gallery.data.entity.Image
 import com.example.gallery.databinding.FragmentFullscreenBinding
 import com.example.gallery.presenter.GalleryPresenter
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import javax.inject.Inject
 
 /**
  * An example full-screen fragment that shows and hides the system UI (i.e.
@@ -37,7 +37,7 @@ import java.io.File
 @AndroidEntryPoint
 class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
     private val hideHandler = Handler()
-    private var presenter: GalleryPresenter? = null
+    @Inject lateinit var presenter: GalleryPresenter
     private var isFromAnotherApp = false
 
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
@@ -105,7 +105,7 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
         val uri = Uri.parse(uriString)
         val image = arguments?.get(IMG_KEY) as? Image
         isFromAnotherApp = uriString != null
-        presenter = GalleryPresenter(GalleryRepository(requireContext()))
+//        presenter = GalleryPresenter(GalleryRepository(requireContext()))
         presenter?.attachView(this)
 
         visible = true

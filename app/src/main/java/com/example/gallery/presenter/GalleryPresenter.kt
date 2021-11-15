@@ -1,19 +1,17 @@
 package com.example.gallery.presenter
 
-import android.app.RecoverableSecurityException
-import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
-import androidx.activity.result.IntentSenderRequest
 import com.example.gallery.Constants.UNKNOWN_ERROR
 import com.example.gallery.data.GalleryRepository
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.ui.GalleryContract
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class GalleryPresenter(private val repo: GalleryRepository) : GalleryContract.Presenter {
+@Singleton
+class GalleryPresenter @Inject constructor (private val repo: GalleryRepository) : GalleryContract.Presenter {
 
-    var mainView: GalleryContract.MainView? = null
-    var fullscreenView: GalleryContract.FullscreenView? = null
+    private var mainView: GalleryContract.MainView? = null
+    private var fullscreenView: GalleryContract.FullscreenView? = null
     private var foldersCache: List<Folder>? = null
 
     override fun loadContent() {
@@ -40,18 +38,22 @@ class GalleryPresenter(private val repo: GalleryRepository) : GalleryContract.Pr
 
         if (foldersCache == null) {
             repo.getContent { error, foldersList ->
-                foldersCache = foldersList
-                loadPreviewsFromCache()
+                if (error != null) {
+                    foldersCache = foldersList
+                    loadPreviewsFromCache()
+                } else {
+                    mainView?.onFailure(error?.message ?: UNKNOWN_ERROR)
+                }
             }
         } else {
             loadPreviewsFromCache()
         }
     }
 
-    override fun attachView(view: GalleryContract.BaseView) {
-        when (view) {
-            is GalleryContract.MainView -> this.mainView = view
-            is GalleryContract.FullscreenView -> this.fullscreenView = view
+    override fun attachView(mainView: GalleryContract.BaseView) {
+        when (mainView) {
+            is GalleryContract.MainView -> this.mainView = mainView
+            is GalleryContract.FullscreenView -> this.fullscreenView = mainView
         }
     }
 
