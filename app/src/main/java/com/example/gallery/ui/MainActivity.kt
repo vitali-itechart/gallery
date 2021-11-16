@@ -25,7 +25,6 @@ class MainActivity : AppCompatActivity(), GalleryContract {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setup()
-        println(presenter)
     }
 
     private fun setup() {

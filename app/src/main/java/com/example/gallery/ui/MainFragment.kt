@@ -63,7 +63,6 @@ class MainFragment : Fragment(), GalleryContract.MainView {
         initContentObserver()
         presenter.attachView(this)
         presenter.loadContent()
-        println(presenter)
     }
 
     private fun initContentObserver() {
