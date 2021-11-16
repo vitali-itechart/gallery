@@ -2,6 +2,7 @@ package com.example.gallery.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +32,7 @@ class MainActivity : AppCompatActivity(), GalleryContract {
 
         if (intent.data != null) {
             isFromAnotherApp = true
-            showImageFullscreen(intent.dataString)
+            showImageFullscreen(intent.data)
         } else {
             setupPermissions { _, granted ->
                 if (granted) {
@@ -52,13 +53,16 @@ class MainActivity : AppCompatActivity(), GalleryContract {
         }
     }
 
-    private fun showImageFullscreen(path: String?) {
+    private fun showImageFullscreen(uri: Uri?) {
 
         val fragmentTransaction = supportFragmentManager
             .beginTransaction()
             .replace(
                 R.id.container,
-                getFullscreenFragment(supportFragmentManager).apply { arguments = bundleOf(Constants.URI_KEY to path) },
+                getFullscreenFragment(supportFragmentManager).apply { arguments = bundleOf(
+                    Constants.URI_KEY to uri,
+                    Constants.IS_FROM_ANOTHER_APP_KEY to true
+                ) },
                 FullscreenFragment.FRAGMENT_NAME
             )
         fragmentTransaction.addToBackStack(FullscreenFragment.FRAGMENT_NAME)

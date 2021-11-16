@@ -20,7 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.example.gallery.Constants.IMG_KEY
+import com.example.gallery.Constants.IS_FROM_ANOTHER_APP_KEY
 import com.example.gallery.Constants.URI_KEY
 import com.example.gallery.R
 import com.example.gallery.data.entity.Image
@@ -101,12 +101,11 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val uriString = arguments?.getString(URI_KEY)
-        val uri = Uri.parse(uriString)
-        val image = arguments?.get(IMG_KEY) as? Image
-        isFromAnotherApp = uriString != null
-//        presenter = GalleryPresenter(GalleryRepository(requireContext()))
-        presenter?.attachView(this)
+//        val uriString = arguments?.getString(URI_KEY)
+        val uri = arguments?.get(URI_KEY) as? Uri
+//        val image = arguments?.get(IMG_KEY) as? Image
+        isFromAnotherApp = arguments?.getBoolean(IS_FROM_ANOTHER_APP_KEY) != false
+        presenter.attachView(this)
 
         visible = true
 
@@ -120,9 +119,10 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
                 if (it.resultCode == AppCompatActivity.RESULT_OK) {
                     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                        image?.let {
-                            deletePhotoFromExternalStorage(image.contentUri)
-                        } ?: deletePhotoFromExternalStorage(uri)
+//                        image?.let {
+//                            deletePhotoFromExternalStorage(image.contentUri)
+//                        } ?:
+                        deletePhotoFromExternalStorage(uri)
                     }
                     parentFragmentManager.popBackStack()
 
@@ -148,7 +148,8 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
             requestDeletionConfirmation { result ->
                 when (result) {
                     DeletionDialogResult.YES -> {
-                        image?.let { deletePhotoFromExternalStorage(image.contentUri) } ?: deletePhotoFromExternalStorage(uri)
+//                        image?.let { deletePhotoFromExternalStorage(image.contentUri) } ?:
+                        deletePhotoFromExternalStorage(uri)
                     }
                     DeletionDialogResult.CANCEL -> {
                     }
@@ -159,7 +160,7 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
         if (uri != null) {
             (fullscreenContent as ImageView).setImageURI(uri)
         } else {
-            image?.let { (fullscreenContent as ImageView).setImageURI(image.contentUri) }
+//            image?.let { (fullscreenContent as ImageView).setImageURI(image.contentUri) }
         }
     }
 
@@ -279,10 +280,12 @@ class FullscreenFragment : Fragment(), GalleryContract.FullscreenView {
             .show()
     }
 
-    private fun deletePhotoFromExternalStorage(photoUri: Uri) {
+    private fun deletePhotoFromExternalStorage(photoUri: Uri?) {
         val contentResolver = activity?.contentResolver
         try {
-            contentResolver?.delete(photoUri, null, null)
+            photoUri?.let {
+                contentResolver?.delete(photoUri, null, null)
+            }
         } catch (e: SecurityException) {
             val intentSender = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {

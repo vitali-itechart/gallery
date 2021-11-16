@@ -1,6 +1,7 @@
 package com.example.gallery.ui
 
 import android.database.ContentObserver
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.LayoutInflater
@@ -16,8 +17,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.gallery.Constants.IMG_KEY
 import com.example.gallery.Constants.RV_SPAN_COUNT
+import com.example.gallery.Constants.URI_KEY
 import com.example.gallery.Constants.defaultFolderName
 import com.example.gallery.R
 import com.example.gallery.data.entity.Folder
@@ -91,7 +92,7 @@ class MainFragment : Fragment(), GalleryContract.MainView {
     }
 
     override fun showFullImage(image: Image) {
-        showImageFullscreen(image)
+        showImageFullscreen(image.contentUri)
     }
 
     override fun onResume() {
@@ -100,6 +101,8 @@ class MainFragment : Fragment(), GalleryContract.MainView {
     }
 
     override fun showFolders(foldersList: List<Folder>) {
+
+        foldersChipGroup?.removeAllViews()
 
         if (foldersList.isEmpty()) {
             emptyStateTv?.visibility = View.VISIBLE
@@ -143,14 +146,14 @@ class MainFragment : Fragment(), GalleryContract.MainView {
         }
     }
 
-    private fun showImageFullscreen(image: Image) {
+    private fun showImageFullscreen(path: Uri?) {
 
         val manager = requireActivity().supportFragmentManager
         val fragmentTransaction = manager
             .beginTransaction()
             .replace(
                 R.id.container,
-                getFullscreenFragment(manager).apply { arguments = bundleOf(IMG_KEY to image) },
+                getFullscreenFragment(manager).apply { arguments = bundleOf(URI_KEY to path) },
                 FullscreenFragment.FRAGMENT_NAME
             )
         fragmentTransaction.addToBackStack(FullscreenFragment.FRAGMENT_NAME)
