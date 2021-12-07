@@ -3,11 +3,9 @@ package com.example.gallery
 import android.content.ContentResolver
 import android.content.Context
 import android.database.MatrixCursor
-import android.provider.ContactsContract
 import android.provider.MediaStore
 import androidx.core.net.toUri
 import com.example.gallery.data.GalleryRepository
-import com.example.gallery.contactlist.ContactsHelper
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
 import org.junit.Before
@@ -16,7 +14,6 @@ import org.junit.runner.RunWith
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.same
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -31,7 +28,7 @@ class RepositoryTest {
 
     @Before
     fun setUp() {
-        val IMAGES_COLUMNS = arrayOf(
+        val imageColumns = arrayOf(
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DISPLAY_NAME,
             MediaStore.Images.Media.WIDTH,
@@ -40,7 +37,7 @@ class RepositoryTest {
             MediaStore.Images.Media.BUCKET_ID,
         )
 
-        imagesCursor = MatrixCursor(IMAGES_COLUMNS)
+        imagesCursor = MatrixCursor(imageColumns)
 
         contentResolver = mock {
 
