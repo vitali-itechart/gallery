@@ -3,7 +3,6 @@ package com.example.gallery.data
 import android.content.ContentUris
 import android.content.Context
 import android.provider.MediaStore
-import com.example.gallery.addToList
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
 import com.example.gallery.sdk29AndUp
@@ -11,14 +10,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 
-class GalleryRepository @Inject constructor (@ApplicationContext private val context: Context) {
+class GalleryRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
     fun getContent(callback: (Throwable?, List<Folder>) -> Unit) {
         callback(null, getAllFoldersWithImages())
     }
 
     private fun getAllFoldersWithImages(): List<Folder> {
-
         val collection = sdk29AndUp {
             MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
         } ?: MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -32,23 +30,28 @@ class GalleryRepository @Inject constructor (@ApplicationContext private val con
             MediaStore.Images.Media.BUCKET_ID,
         )
 
-        val imagesByFolderNames = mutableMapOf<String, MutableList<Image>>()
+        val bucketNamesWithImages = mutableListOf<Pair<String, Image>>()
 
-        return (context.contentResolver.query(
+        val cur = context.contentResolver.query(
             collection,
             projection,
             null,
             null,
             "${MediaStore.Images.Media.DISPLAY_NAME} ASC"
-        )?.use { cursor ->
+        )
+
+        return cur?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             val displayNameColumn =
                 cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
             val widthColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
             val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
-            val bucketDisplayName = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+            val bucketDisplayName =
+                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
 
             val isEmpty = !(cursor.moveToFirst()) || cursor.count == 0
+
+            if (isEmpty) println("Cursor is empty!")
 
             if (!isEmpty) {
                 do {
@@ -62,10 +65,14 @@ class GalleryRepository @Inject constructor (@ApplicationContext private val con
                     )
                     val bucketName = cursor.getString(bucketDisplayName)
                     val image = Image(id, displayName, width, height, contentUri)
-                    imagesByFolderNames.addToList(bucketName, image)
+                    bucketNamesWithImages.add(bucketName to image)
                 } while (cursor.moveToNext())
             }
-            imagesByFolderNames.flatMap { listOf(Folder(it.key, it.value)) }
-        } ?: listOf())
+            bucketNamesWithImages
+                .groupBy { it.first }
+                .flatMap {
+                    listOf(Folder(it.key, it.value.map { it.second }))
+                }
+        } ?: listOf()
     }
 }

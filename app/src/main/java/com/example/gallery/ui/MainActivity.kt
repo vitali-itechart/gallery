@@ -1,26 +1,24 @@
 package com.example.gallery.ui
 
+import androidx.appcompat.app.AppCompatActivity
+
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentManager
 import com.example.gallery.Constants
 import com.example.gallery.R
-import com.example.gallery.presenter.GalleryPresenter
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), GalleryContract {
 
     private var permissionsCallback: ((Throwable?, Boolean) -> Unit)? = null
     private var isFromAnotherApp = false
-    @Inject lateinit var presenter: GalleryPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,10 +100,8 @@ class MainActivity : AppCompatActivity(), GalleryContract {
         if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
             checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         ) {
-            println("Permission is granted")
             permissionsCallback?.invoke(null, true)
         } else {
-            println("Permission is revoked")
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
