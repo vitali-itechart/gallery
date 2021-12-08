@@ -7,13 +7,17 @@ import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
 import com.example.gallery.sdk29AndUp
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 
 class GalleryRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
-    fun getContent(callback: (Throwable?, List<Folder>) -> Unit) {
-        callback(null, getAllFoldersWithImages())
+    fun getContent(): Flow<List<Folder>> {
+        return flow {
+            emit(getAllFoldersWithImages())
+        }
     }
 
     private fun getAllFoldersWithImages(): List<Folder> {

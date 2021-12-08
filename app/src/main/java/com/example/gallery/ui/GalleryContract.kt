@@ -2,6 +2,7 @@ package com.example.gallery.ui
 
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
+import kotlinx.coroutines.flow.Flow
 
 interface GalleryContract {
 
