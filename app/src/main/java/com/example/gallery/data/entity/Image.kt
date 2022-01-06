@@ -1,9 +1,8 @@
 package com.example.gallery.data.entity
 
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Image(
@@ -11,5 +10,5 @@ data class Image(
     val name: String,
     val width: Int,
     val height: Int,
-    val contentUri: Uri
+    var contentUri: Uri
 ) : Parcelable
