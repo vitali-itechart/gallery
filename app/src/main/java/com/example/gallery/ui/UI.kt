@@ -5,7 +5,6 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-
 import com.example.gallery.data.entity.Content
 import com.example.gallery.ui.theme.GalleryTheme
 import java.net.URLEncoder
