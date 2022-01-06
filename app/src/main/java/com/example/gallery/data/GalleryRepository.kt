@@ -3,21 +3,21 @@ package com.example.gallery.data
 import android.content.ContentUris
 import android.content.Context
 import android.provider.MediaStore
+import com.example.gallery.data.entity.Content
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
 import com.example.gallery.sdk29AndUp
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 
 class GalleryRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
-    fun getContent(): Flow<List<Folder>> {
-        return flow {
-            emit(getAllFoldersWithImages())
-        }
+    fun getContent(): MutableStateFlow<Content> {
+        return MutableStateFlow(Content(getAllFoldersWithImages(), 0))
     }
 
     private fun getAllFoldersWithImages(): List<Folder> {
