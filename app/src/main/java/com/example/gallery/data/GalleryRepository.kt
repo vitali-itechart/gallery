@@ -2,6 +2,7 @@ package com.example.gallery.data
 
 import android.content.ContentUris
 import android.content.Context
+import android.database.ContentObserver
 import android.provider.MediaStore
 import com.example.gallery.data.entity.Content
 import com.example.gallery.data.entity.Folder
@@ -11,13 +12,30 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 
 class GalleryRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
+    private val contentFlow = MutableStateFlow(Content(getAllFoldersWithImages(), 0))
+
+    init {
+
+        val contentObserver = object : ContentObserver(null) {
+            override fun onChange(selfChange: Boolean) {
+                contentFlow.update { it.copy(folders = getAllFoldersWithImages()) }
+            }
+        }
+        context.contentResolver?.registerContentObserver(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            true,
+            contentObserver
+        )
+    }
+
     fun getContent(): MutableStateFlow<Content> {
-        return MutableStateFlow(Content(getAllFoldersWithImages(), 0))
+        return contentFlow
     }
 
     private fun getAllFoldersWithImages(): List<Folder> {
