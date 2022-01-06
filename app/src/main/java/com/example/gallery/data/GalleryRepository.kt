@@ -38,6 +38,10 @@ class GalleryRepository @Inject constructor(@ApplicationContext private val cont
         return contentFlow
     }
 
+    fun getContentBlocking(): Content {
+        return Content(getAllFoldersWithImages(), 0)
+    }
+
     private fun getAllFoldersWithImages(): List<Folder> {
         val collection = sdk29AndUp {
             MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)

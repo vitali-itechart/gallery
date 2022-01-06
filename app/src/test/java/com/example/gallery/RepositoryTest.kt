@@ -9,9 +9,9 @@ import androidx.core.net.toUri
 import com.example.gallery.data.GalleryRepository
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
-import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,6 +29,10 @@ class RepositoryTest {
     private lateinit var contentResolver: ContentResolver
     private lateinit var ctx: Context
     private lateinit var repo: GalleryRepository
+    val exceptions = mutableListOf<Throwable>()
+    val customCaptor = CoroutineExceptionHandler { ctx, throwable ->
+        exceptions.add(throwable) // add proper synchronization if the test is multithreaded
+    }
 
     @Before
     fun setUp() {
@@ -65,6 +69,7 @@ class RepositoryTest {
         repo = GalleryRepository(ctx)
     }
 
+    @ExperimentalCoroutinesApi
     @InternalCoroutinesApi
     @Test
     fun `get folders with images`() {
@@ -151,15 +156,9 @@ class RepositoryTest {
         imagesCursor.addRow(imageData4)
         imagesCursor.addRow(imageData5)
 
+        val content = repo.getContentBlocking()
 
-
-        runBlocking {
-
-            repo.getContent().collect { content ->
-
-                assert(result.containsAll(content.folders))
-            }
-        }
+        assert(result.containsAll(content.folders))
 
     }
 }
