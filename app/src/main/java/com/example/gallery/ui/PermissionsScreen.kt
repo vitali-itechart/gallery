@@ -28,12 +28,9 @@ fun PermissionsScreen(permissionGranted: (Boolean) -> Unit) {
                 context,
                 Manifest.permission.READ_EXTERNAL_STORAGE
             ) -> {
-                // Some works that require permission
-                //("ExampleScreen","Code requires permission")
                 permissionGranted(true)
             }
             else -> {
-                // Asking for permission
                 SideEffect {
                     launcher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                 }

@@ -6,6 +6,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.gallery.data.entity.Content
+import com.example.gallery.ui.ScreenIdentifiers.MAIN_SCREEN
+import com.example.gallery.ui.ScreenIdentifiers.PERMISSIONS_SCREEN
+import com.example.gallery.ui.ScreenIdentifiers.PICTURE_FULLSCREEN
 import com.example.gallery.ui.theme.GalleryTheme
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -22,21 +25,20 @@ fun UI(state: State<Content>, onSelectedChanged: (Int) -> Unit, onPermissionDeni
 
         NavHost(
             navController = navController,
-            startDestination = if (permission) "MainScreen" else "PermissionsScreen",
+            startDestination = if (permission) MAIN_SCREEN else PERMISSIONS_SCREEN,
         ) {
-            composable("PermissionsScreen") {
+            composable(PERMISSIONS_SCREEN) {
 
                 PermissionsScreen(permissionGranted = { granted ->
                     if (granted) {
-                        println("permission granted!!!")
                         permission = true
-                        navController.navigate("MainScreen")
+                        navController.navigate(MAIN_SCREEN)
                     } else {
                         onPermissionDenied()
                     }
                 })
             }
-            composable("MainScreen") {
+            composable(MAIN_SCREEN) {
                 MainScreen(state,
                     onSelectedChanged = onSelectedChanged,
                     onImageSelected = {
@@ -44,10 +46,10 @@ fun UI(state: State<Content>, onSelectedChanged: (Int) -> Unit, onPermissionDeni
                             it.contentUri.toString(),
                             StandardCharsets.UTF_8.toString()
                         )
-                        navController.navigate("PictureFullscreen/$encodedUrl")
+                        navController.navigate("$PICTURE_FULLSCREEN/$encodedUrl")
                     })
             }
-            composable("PictureFullscreen/{imageUri}") { backStackEntry ->
+            composable("$PICTURE_FULLSCREEN/{imageUri}") { backStackEntry ->
                 backStackEntry.arguments?.getString("imageUri")?.let { PictureFullscreen(it) }
             }
         }
