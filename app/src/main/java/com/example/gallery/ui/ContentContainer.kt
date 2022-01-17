@@ -16,12 +16,12 @@ import com.example.gallery.data.entity.Image
 @ExperimentalFoundationApi
 @Composable
 fun ContentContainer(
-    state: State<Content>,
+    state: Content,
     selectedFolder: Folder? = null,
     onSelectedChanged: (Int) -> Unit = {},
     onImageSelected: (Image) -> Unit = {},
 ) {
-    with(state.value) {
+    with(state) {
         Column(modifier = Modifier.padding(8.dp)) {
             LazyRow {
                 items(folders.size) { index ->

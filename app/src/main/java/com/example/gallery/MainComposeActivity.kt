@@ -4,13 +4,12 @@ package com.example.gallery
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.ExperimentalFoundationApi
 
 import androidx.compose.runtime.*
 
-import com.example.gallery.data.entity.Content
-
-import com.example.gallery.ui.UI
+import com.example.gallery.ui.*
 
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -20,24 +19,21 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainComposeActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var vm: MainViewModel
+    private val vm: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
 
-            val state: State<Content> = vm.stateFlow.collectAsState(initial = Content())
-
             UI(
-                state,
+                vm.state,
                 onSelectedChanged = { newSelectedFolderIndex ->
-                    vm.processEvent(
-                        Event.SelectFolder(newSelectedFolderIndex)
+                    vm.accept(
+                        MainViewModel.Msg.OnFolderClicked(newSelectedFolderIndex)
                     )
-                },
-                onPermissionDenied = { finishAffinity() })
+                }
+            ) { finishAffinity() }
         }
     }
 }

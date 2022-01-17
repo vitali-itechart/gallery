@@ -7,24 +7,25 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.gallery.data.entity.Content
+import com.example.gallery.MainViewModel
 import com.example.gallery.data.entity.Image
 
 @ExperimentalFoundationApi
 @Composable
 fun MainScreen(
-    content: State<Content>,
+    state: MainViewModel.State.Loaded,
     onSelectedChanged: (Int) -> Unit,
     onImageSelected: (Image) -> Unit
 ) {
 
     Surface(color = MaterialTheme.colors.background) {
 
-        with(content.value) {
+        with(state) {
+
+            val folders = content.folders
 
             if (folders.isEmpty()) {
                 Box(contentAlignment = Alignment.Center) {
@@ -39,8 +40,8 @@ fun MainScreen(
                     TopAppBar(title = { Text(text = "Gallery") })
                     Spacer(modifier = Modifier.padding(18.dp))
                     ContentContainer(
-                        state = content,
-                        selectedFolder = folders[selectedFolderIndex],
+                        state = state.content,
+                        selectedFolder = folders[content.selectedFolderIndex],
                         onSelectedChanged = onSelectedChanged,
                         onImageSelected = onImageSelected
                     )
