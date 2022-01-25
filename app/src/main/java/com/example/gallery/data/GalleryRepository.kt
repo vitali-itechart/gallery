@@ -1,30 +1,42 @@
 package com.example.gallery.data
 
 import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
 import android.database.ContentObserver
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
+import androidx.core.net.toUri
 import com.example.gallery.data.entity.Content
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
 import com.example.gallery.sdk29AndUp
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 import javax.inject.Inject
 
 
 class GalleryRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val contentFlow = MutableStateFlow(Content(getAllFoldersWithImages(), 0))
+    private val _contentFlow = MutableStateFlow(Content(getAllFoldersWithImages(), 0))
+    val contentFlow: StateFlow<Content> = _contentFlow
 
     init {
 
         val contentObserver = object : ContentObserver(null) {
             override fun onChange(selfChange: Boolean) {
-                contentFlow.update { it.copy(folders = getAllFoldersWithImages()) }
+                _contentFlow.update { it.copy(folders = getAllFoldersWithImages()) }
             }
         }
         context.contentResolver?.registerContentObserver(
@@ -34,11 +46,45 @@ class GalleryRepository @Inject constructor(@ApplicationContext private val cont
         )
     }
 
-    fun getContent(): MutableStateFlow<Content> {
-        return contentFlow
+    fun saveMediaToStorage(file: File) {
+        val input = context.contentResolver.openInputStream(file.toUri())
+        val bitmap = BitmapFactory.decodeStream(input)
+        val filename = "${System.currentTimeMillis()}.jpg"
+
+        var fos: OutputStream? = null
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            context.contentResolver?.also { resolver ->
+
+                val contentValues = ContentValues().apply {
+
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                }
+
+                val imageUri: Uri? =
+                    resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+                fos = imageUri?.let { resolver.openOutputStream(it) }
+            }
+        } else {
+            val imagesDir =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val image = File(imagesDir, filename)
+            fos = FileOutputStream(image)
+        }
+
+        fos?.use {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+        }
     }
 
     fun getContentBlocking(): Content {
+        return Content(getAllFoldersWithImages(), 0)
+    }
+
+    suspend fun getContent(): Content {
         return Content(getAllFoldersWithImages(), 0)
     }
 
@@ -54,6 +100,8 @@ class GalleryRepository @Inject constructor(@ApplicationContext private val cont
             MediaStore.Images.Media.HEIGHT,
             MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
             MediaStore.Images.Media.BUCKET_ID,
+            MediaStore.Images.Media.DATE_TAKEN,
+            MediaStore.Images.Media.MIME_TYPE,
         )
 
         val bucketNamesWithImages = mutableListOf<Pair<String, Image>>()
@@ -74,6 +122,8 @@ class GalleryRepository @Inject constructor(@ApplicationContext private val cont
             val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
             val bucketDisplayName =
                 cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+            val dateTakenColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
+            val mimeTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE)
 
             val isEmpty = !(cursor.moveToFirst()) || cursor.count == 0
 
@@ -90,7 +140,9 @@ class GalleryRepository @Inject constructor(@ApplicationContext private val cont
                         id
                     )
                     val bucketName = cursor.getString(bucketDisplayName)
-                    val image = Image(id, displayName, width, height, contentUri)
+                    val dateTaken = cursor.getString(dateTakenColumn)
+                    val mimeType = cursor.getString(mimeTypeColumn)
+                    val image = Image(id, displayName, width, height, contentUri, dateTaken, mimeType)
                     bucketNamesWithImages.add(bucketName to image)
                 } while (cursor.moveToNext())
             }

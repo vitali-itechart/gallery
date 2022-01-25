@@ -21,31 +21,30 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.MoneyOff
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.gallery.ui.ScreenIdentifiers.MAIN_SCREEN
 
 /**
  * Screen metadata for Rally.
  */
-enum class GalleryScreen(
+enum class RallyScreen(
     val icon: ImageVector,
 ) {
-    Content(
+    Overview(
         icon = Icons.Filled.PieChart,
     ),
-    ImageFullscreen(
+    Accounts(
         icon = Icons.Filled.AttachMoney,
     ),
-    Metadata(
+    Bills(
         icon = Icons.Filled.MoneyOff,
     );
 
     companion object {
-        fun fromRoute(route: String?): GalleryScreen =
+        fun fromRoute(route: String?): RallyScreen =
             when (route?.substringBefore("/")) {
-                ImageFullscreen.name -> ImageFullscreen
-                Metadata.name -> Metadata
-                MAIN_SCREEN -> Content
-                null -> Content
+                Accounts.name -> Accounts
+                Bills.name -> Bills
+                Overview.name -> Overview
+                null -> Overview
                 else -> throw IllegalArgumentException("Route $route is not recognized.")
             }
     }

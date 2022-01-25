@@ -10,11 +10,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.*
 
 import com.example.gallery.ui.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 import dagger.hilt.android.AndroidEntryPoint
 
 import javax.inject.Inject
 
+@ExperimentalPermissionsApi
 @ExperimentalFoundationApi
 @AndroidEntryPoint
 class MainComposeActivity : ComponentActivity() {
@@ -32,8 +34,12 @@ class MainComposeActivity : ComponentActivity() {
                     vm.accept(
                         MainViewModel.Msg.OnFolderClicked(newSelectedFolderIndex)
                     )
-                }
-            ) { finishAffinity() }
+                },
+                onPermissionDenied = { finishAffinity() },
+                onImageSelected = { vm.accept(MainViewModel.Msg.OnImageSelected(it)) },
+                onMetadataClick = { vm.accept(MainViewModel.Msg.OnImageSelected(it)) },
+                onPictureTaken = { vm.accept(MainViewModel.Msg.SaveImageFile(it)) },
+            )
         }
     }
 }

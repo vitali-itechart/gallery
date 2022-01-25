@@ -4,13 +4,11 @@ import android.content.ContentResolver
 import android.content.Context
 import android.database.MatrixCursor
 import android.provider.MediaStore
-import androidx.compose.runtime.collectAsState
 import androidx.core.net.toUri
 import com.example.gallery.data.GalleryRepository
 import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.test.*
 import org.junit.Before
 import org.junit.Test
@@ -112,14 +110,18 @@ class RepositoryTest {
                         "download (1)",
                         191,
                         119,
-                        "content://media/external/images/media/44".toUri()
+                        "content://media/external/images/media/44".toUri(),
+                        dateTaken,
+                        mimeType
                     ),
                     Image(
                         46,
                         "download",
                         192,
                         111,
-                        "content://media/external/images/media/46".toUri()
+                        "content://media/external/images/media/46".toUri(),
+                        dateTaken,
+                        mimeType
                     ),
                 )
             ),
@@ -130,21 +132,27 @@ class RepositoryTest {
                         "download123",
                         192,
                         111,
-                        "content://media/external/images/media/47".toUri()
+                        "content://media/external/images/media/47".toUri(),
+                        dateTaken,
+                        mimeType
                     ),
                     Image(
                         48,
                         "downloadasdasd",
                         192,
                         111,
-                        "content://media/external/images/media/48".toUri()
+                        "content://media/external/images/media/48".toUri(),
+                        dateTaken,
+                        mimeType
                     ),
                     Image(
                         49,
                         "downloadqqq",
                         192,
                         111,
-                        "content://media/external/images/media/49".toUri()
+                        "content://media/external/images/media/49".toUri(),
+                        dateTaken,
+                        mimeType
                     ),
                 )
 

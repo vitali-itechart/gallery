@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Gallery</string>
-    <string name="loading">Loading</string>
+    <string name="loading">Loading…</string>
     <string name="permission_warning">You need the permission to proceed. Try again?</string>
     <string name="yes">Yes</string>
     <string name="close">Close</string>
@@ -16,4 +16,5 @@
     <string name="no_folders_with_images_found">No folders with images found</string>
     <string name="title_activity_main2">MainActivity2</string>
     <string name="title_activity_main_compose">MainComposeActivity</string>
+    <string name="show_metadata">Show metadata</string>
 </resources>

@@ -37,7 +37,6 @@ fun MainScreen(
                 }
             } else {
                 Column {
-                    TopAppBar(title = { Text(text = "Gallery") })
                     Spacer(modifier = Modifier.padding(18.dp))
                     ContentContainer(
                         state = state.content,
