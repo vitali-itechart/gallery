@@ -47,10 +47,10 @@ fun CameraCapture(
     val context = LocalContext.current
     Permission(
         permission = Manifest.permission.CAMERA,
-        rationale = "You said you wanted a picture, so I'm going to have to ask for permission.",
+        rationale = "Permission to use the camera is needed.",
         permissionNotAvailableContent = {
             Column(modifier) {
-                Text("O noes! No Camera!")
+                Text("Permission not available")
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {

@@ -16,13 +16,11 @@ import com.example.gallery.data.entity.Folder
 import com.example.gallery.data.entity.Image
 import com.example.gallery.sdk29AndUp
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
 
@@ -47,6 +45,10 @@ class GalleryRepository @Inject constructor(@ApplicationContext private val cont
     }
 
     fun saveMediaToStorage(file: File) {
+        val mimeType = file.toURI().toURL().openConnection().contentType
+        if (mimeType.contains("image").not()) {
+            throw IllegalArgumentException("Wrong image format: $mimeType")
+        }
         val input = context.contentResolver.openInputStream(file.toUri())
         val bitmap = BitmapFactory.decodeStream(input)
         val filename = "${System.currentTimeMillis()}.jpg"
@@ -59,7 +61,7 @@ class GalleryRepository @Inject constructor(@ApplicationContext private val cont
                 val contentValues = ContentValues().apply {
 
                     put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
+                    put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
                     put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
                 }
 
@@ -84,7 +86,7 @@ class GalleryRepository @Inject constructor(@ApplicationContext private val cont
         return Content(getAllFoldersWithImages(), 0)
     }
 
-    suspend fun getContent(): Content {
+    suspend fun getContent(): Content { //I'm aware suspension is redundant here but is here just for demo purposes
         return Content(getAllFoldersWithImages(), 0)
     }
 
